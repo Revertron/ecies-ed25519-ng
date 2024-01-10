@@ -11,6 +11,7 @@ ECIES can be used to encrypt data using a public key such that it can only be de
 
 *This project has not undergone a security audit. A 1.0 release will not happen until it does.*
 
+*This project is forked from [phayes/ecies-ed25519](https://github.com/phayes/ecies-ed25519) but has updated dependencies.* 
 
 ### Backends
 
