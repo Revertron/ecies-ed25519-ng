@@ -15,7 +15,7 @@ rand = "0.8.5"
 curve25519-dalek = { version = "4.1.1", features = ["legacy_compatibility"] }
 thiserror = "1.0.56"
 hex = "0.4.3"
-zeroize = "1.6.0"
+zeroize = "1.7.0"
 # "serde" feature
 serde = { version = "1.0.125", optional = true }
 # "ring" feature
