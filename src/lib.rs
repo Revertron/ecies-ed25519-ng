@@ -16,15 +16,15 @@
 //! ## Example Usage
 //! ```rust
 //! let mut csprng = rand::thread_rng();
-//! let (secret, public) = ecies_ed25519::generate_keypair(&mut csprng);
+//! let (secret, public) = ecies_ed25519_ng::generate_keypair(&mut csprng);
 //!
 //! let message = "I 💖🔒";
 //!
 //! // Encrypt the message with the public key such that only the holder of the secret key can decrypt.
-//! let encrypted = ecies_ed25519::encrypt(&public, message.as_bytes(), &mut csprng).unwrap();
+//! let encrypted = ecies_ed25519_ng::encrypt(&public, message.as_bytes(), &mut csprng).unwrap();
 //!
 //! // Decrypt the message with the secret key
-//! let decrypted = ecies_ed25519::decrypt(&secret, &encrypted);
+//! let decrypted = ecies_ed25519_ng::decrypt(&secret, &encrypted);
 //!```
 //!
 //! ## `serde` support
@@ -109,6 +109,7 @@ pub fn decrypt(receiver_sec: &SecretKey, ciphertext: &[u8]) -> Result<Vec<u8>, E
 
 fn generate_shared(secret: &SecretKey, public: &PublicKey) -> SharedSecret {
     let public = public.to_point();
+    #[allow(deprecated)]
     let secret = Scalar::from_bits(secret.to_bytes());
     let shared_point = public * secret;
     let shared_point_compressed = shared_point.compress();

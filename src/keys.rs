@@ -3,6 +3,7 @@ use core::iter::FromIterator;
 use curve25519_dalek::constants;
 use curve25519_dalek::edwards::{CompressedEdwardsY, EdwardsPoint};
 use curve25519_dalek::scalar::Scalar;
+use curve25519_dalek::traits::BasepointTable;
 use hex::{FromHex, ToHex};
 use rand::{CryptoRng, RngCore};
 use zeroize::Zeroize;
@@ -66,9 +67,9 @@ impl SecretKey {
     /// # Example
     ///
     /// ```
-    /// use ecies_ed25519::SecretKey;
-    /// use ecies_ed25519::SECRET_KEY_LENGTH;
-    /// use ecies_ed25519::Error;
+    /// use ecies_ed25519_ng::SecretKey;
+    /// use ecies_ed25519_ng::SECRET_KEY_LENGTH;
+    /// use ecies_ed25519_ng::Error;
     ///
     /// # fn doctest() -> Result<SecretKey, Error> {
     /// let secret_key_bytes: [u8; SECRET_KEY_LENGTH] = [
@@ -138,7 +139,13 @@ impl PublicKey {
             return Err(Error::InvalidPublicKeyBytes);
         }
 
-        let point = CompressedEdwardsY::from_slice(bytes);
+        let point = match CompressedEdwardsY::from_slice(bytes) {
+            Ok(p) => p,
+            Err(e) => {
+                println!("Error creating CompressedEdwardsY from slice: {e}");
+                return Err(Error::InvalidPublicKeyBytes);
+            }
+        };
 
         if point.decompress().is_none() {
             return Err(Error::InvalidPublicKeyBytes);
@@ -148,13 +155,15 @@ impl PublicKey {
 
     /// Derive a public key from a private key
     pub fn from_secret(sk: &SecretKey) -> Self {
-        let point = &Scalar::from_bits(sk.to_bytes()) * &constants::ED25519_BASEPOINT_TABLE;
+        #[allow(deprecated)]
+        let point = &Scalar::from_bits(sk.to_bytes()) * constants::ED25519_BASEPOINT_TABLE.basepoint();
         PublicKey(point.compress())
     }
 
     /// Get the Edwards Point for this public key
     pub fn to_point(&self) -> EdwardsPoint {
         CompressedEdwardsY::from_slice(self.0.as_bytes())
+            .expect("ecies-ed25519: unexpect error reading public key")
             .decompress()
             .expect("ecies-ed25519: unexpect error decompressing public key")
     }
