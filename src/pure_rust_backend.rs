@@ -1,12 +1,12 @@
-use aes_gcm::aead::{self, generic_array::GenericArray, Aead, NewAead};
-use aes_gcm::Aes256Gcm;
+use aes_gcm::aead::{self, Aead, generic_array::GenericArray};
+use aes_gcm::{Aes256Gcm, KeyInit};
 use hkdf::Hkdf;
 use rand::{CryptoRng, RngCore};
 use sha2::Sha256;
 
+use super::AES_IV_LENGTH;
 use super::AesKey;
 use super::Error;
-use super::AES_IV_LENGTH;
 use super::HKDF_INFO;
 
 pub(crate) fn hkdf_sha256(master: &[u8]) -> AesKey {
