@@ -5,7 +5,7 @@ use curve25519_dalek::edwards::{CompressedEdwardsY, EdwardsPoint};
 use curve25519_dalek::scalar::Scalar;
 use curve25519_dalek::traits::BasepointTable;
 use hex::{FromHex, ToHex};
-use rand::{CryptoRng, RngCore};
+use rand::{CryptoRng, Rng};
 use zeroize::Zeroize;
 
 /// The length of a `SecretKey`, in bytes.
@@ -67,9 +67,9 @@ impl SecretKey {
     /// # Example
     ///
     /// ```
-    /// use ecies_ed25519_ng::SecretKey;
-    /// use ecies_ed25519_ng::SECRET_KEY_LENGTH;
-    /// use ecies_ed25519_ng::Error;
+    /// use ecies_ed25519_rev::SecretKey;
+    /// use ecies_ed25519_rev::SECRET_KEY_LENGTH;
+    /// use ecies_ed25519_rev::Error;
     ///
     /// # fn doctest() -> Result<SecretKey, Error> {
     /// let secret_key_bytes: [u8; SECRET_KEY_LENGTH] = [
@@ -102,7 +102,7 @@ impl SecretKey {
     /// Generate a `SecretKey` from a `csprng`.
     pub fn generate<T>(csprng: &mut T) -> SecretKey
     where
-        T: CryptoRng + RngCore,
+        T: CryptoRng + Rng,
     {
         let mut sk: SecretKey = SecretKey([0u8; 32]);
         csprng.fill_bytes(&mut sk.0);

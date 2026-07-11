@@ -15,16 +15,16 @@
 //!
 //! ## Example Usage
 //! ```rust
-//! let mut csprng = rand::thread_rng();
-//! let (secret, public) = ecies_ed25519_ng::generate_keypair(&mut csprng);
+//! let mut csprng = rand::rng();
+//! let (secret, public) = ecies_ed25519_rev::generate_keypair(&mut csprng);
 //!
 //! let message = "I 💖🔒";
 //!
 //! // Encrypt the message with the public key such that only the holder of the secret key can decrypt.
-//! let encrypted = ecies_ed25519_ng::encrypt(&public, message.as_bytes(), &mut csprng).unwrap();
+//! let encrypted = ecies_ed25519_rev::encrypt(&public, message.as_bytes(), &mut csprng).unwrap();
 //!
 //! // Decrypt the message with the secret key
-//! let decrypted = ecies_ed25519_ng::decrypt(&secret, &encrypted);
+//! let decrypted = ecies_ed25519_rev::decrypt(&secret, &encrypted);
 //!```
 //!
 //! ## `serde` support
@@ -33,7 +33,7 @@
 //!
 
 use curve25519_dalek::scalar::Scalar;
-use rand::{CryptoRng, RngCore};
+use rand::{CryptoRng, Rng};
 
 mod keys;
 pub use keys::*;
@@ -68,14 +68,14 @@ type AesKey = [u8; 32];
 type SharedSecret = [u8; 32];
 
 /// Generate a keypair, ready for use in ECIES
-pub fn generate_keypair<R: CryptoRng + RngCore>(rng: &mut R) -> (SecretKey, PublicKey) {
+pub fn generate_keypair<R: CryptoRng + Rng>(rng: &mut R) -> (SecretKey, PublicKey) {
     let secret = SecretKey::generate(rng);
     let public = PublicKey::from_secret(&secret);
     (secret, public)
 }
 
 /// Encrypt a message using ECIES, it can only be decrypted by the receiver's SecretKey.
-pub fn encrypt<R: CryptoRng + RngCore>(
+pub fn encrypt<R: CryptoRng + Rng>(
     receiver_pub: &PublicKey,
     msg: &[u8],
     rng: &mut R,
@@ -175,13 +175,13 @@ pub enum Error {
 pub mod tests {
     use super::*;
 
-    use rand::thread_rng;
+    use rand::rng;
     use rand::SeedableRng;
 
     #[test]
     fn test_shared() {
-        let (emphemeral_sk, emphemeral_pk) = generate_keypair(&mut thread_rng());
-        let (peer_sk, peer_pk) = generate_keypair(&mut thread_rng());
+        let (emphemeral_sk, emphemeral_pk) = generate_keypair(&mut rng());
+        let (peer_sk, peer_pk) = generate_keypair(&mut rng());
 
         assert_eq!(
             generate_shared(&emphemeral_sk, &peer_pk),
@@ -197,8 +197,8 @@ pub mod tests {
 
     #[test]
     fn test_encapsulation() {
-        let (emphemeral_sk, emphemeral_pk) = generate_keypair(&mut thread_rng());
-        let (peer_sk, peer_pk) = generate_keypair(&mut thread_rng());
+        let (emphemeral_sk, emphemeral_pk) = generate_keypair(&mut rng());
+        let (peer_sk, peer_pk) = generate_keypair(&mut rng());
 
         assert_eq!(
             encapsulate(&emphemeral_sk, &peer_pk),
@@ -222,17 +222,17 @@ pub mod tests {
         assert!(aes_decrypt(&key, &[0u8; 16]).is_err());
 
         // Test bad secret key
-        let bad_secret = SecretKey::generate(&mut thread_rng());
+        let bad_secret = SecretKey::generate(&mut rng());
         assert!(aes_decrypt(&bad_secret.as_bytes(), &encrypted).is_err());
     }
 
     #[test]
     fn test_ecies_ed25519() {
-        let (peer_sk, peer_pk) = generate_keypair(&mut thread_rng());
+        let (peer_sk, peer_pk) = generate_keypair(&mut rng());
 
         let plaintext = b"ABOLISH ICE";
 
-        let encrypted = encrypt(&peer_pk, plaintext, &mut thread_rng()).unwrap();
+        let encrypted = encrypt(&peer_pk, plaintext, &mut rng()).unwrap();
         let decrypted = decrypt(&peer_sk, &encrypted).unwrap();
 
         assert_eq!(plaintext, decrypted.as_slice());
@@ -241,7 +241,7 @@ pub mod tests {
         assert!(decrypt(&peer_sk, &[0u8; 16]).is_err());
 
         // Test that it fails when using a bad secret key
-        let bad_secret = SecretKey::generate(&mut thread_rng());
+        let bad_secret = SecretKey::generate(&mut rng());
         assert!(decrypt(&bad_secret, &encrypted).is_err());
     }
 
